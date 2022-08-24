@@ -1,4 +1,4 @@
-import { FormEvent, useContext } from 'react';
+import { FormEvent, useContext, useState } from 'react';
 import Head from 'next/head';
 import styles from '../../styles/home.module.scss';
 import Image from 'next/image';
@@ -11,19 +11,35 @@ import { Button } from '../components/ui/Button';
 import { AuthContext } from '../contexts/AuthContext';
 
 import Link from 'next/link';
+import { toast } from 'react-toastify';
+import { GetServerSideProps } from 'next';
+import { canSSRGuest } from '../utils/canSSRGuest';
 
 export default function Home() {
   const { signIn } = useContext(AuthContext);
 
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const [loading, setLoading] = useState(false);
+
   async function handleLogin(event: FormEvent) {
     event.preventDefault();
 
+    if (email === '' || password === '') {
+      toast.error("Preencha todos os campos");
+    }
+
+    setLoading(true);
+
     let data = {
-      email: 'teste@teste.com',
-      password: '123123'
+      email,
+      password
     };
 
     await signIn(data);
+
+    setLoading(false);
   }
 
   return (
@@ -38,15 +54,19 @@ export default function Home() {
             <Input
               type='text'
               placeholder='Digite seu Email'
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
 
             <Input
               type='password'
               placeholder='Digite sua Senha'
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <Button
               type='submit'
-              loading={false}
+              loading={loading}
             >
               Acessar
             </Button>
@@ -61,3 +81,9 @@ export default function Home() {
     </>
   );
 }
+
+export const getServerSideProps = canSSRGuest(async (ctx) => {
+  return {
+    props: {}
+  };
+});
