@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { canSSRAuth } from "../../utils/canSSRAuth";
 import Head from "next/head";
@@ -66,7 +66,26 @@ export default function Dashboard({ orderList }: OrderProps) {
         setModalVisible(true);
     }
 
-    Modal.setAppElement('#__next');
+
+
+    async function handleFinishItem(id: string) {
+        const apiClient = setupAPIClient();
+        await apiClient.put('/orders/finish', {
+            order_id: id
+        });
+
+        const response = await apiClient.get('/orders');
+
+        setOrder(response.data);
+
+        setModalVisible(false);
+    }
+
+    async function handleRefreshOrders() {
+        const apiClient = setupAPIClient();
+        const response = await apiClient.get('/orders');
+        setOrder(response.data);
+    }
 
 
     return (
@@ -81,11 +100,17 @@ export default function Dashboard({ orderList }: OrderProps) {
                 <main className={styles.container}>
                     <div className={styles.containerHeader}>
                         <h1>Últimos pedidos</h1>
-                        <button>
+                        <button onClick={handleRefreshOrders}>
                             <FiRefreshCcw color="3FFFA3" />
                         </button>
                     </div>
                     <article className={styles.listOrder}>
+
+                        {order.length === 0 && (
+                            <span className={styles.emptyList}>
+                                Nenhum pedido aberto foi encontrado...
+                            </span>
+                        )}
                         {
                             order.map((item) => {
 
@@ -109,6 +134,7 @@ export default function Dashboard({ orderList }: OrderProps) {
                         isOpen={modalVisible}
                         onRequestClose={handleCloseModal}
                         order={modalItem}
+                        handleFinishOrder={handleFinishItem}
                     />
                 )}
             </div>
