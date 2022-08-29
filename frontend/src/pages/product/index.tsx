@@ -127,8 +127,6 @@ export const getServerSideProps = canSSRAuth(async (ctx) => {
 
     const response = await apiClient.get('/category');
 
-    console.log(response.data);
-
     return {
         props: {
             categoryList: response.data
